@@ -1,0 +1,158 @@
+from bs4 import BeautifulSoup
+import requests
+import pandas as pd
+from datetime import datetime
+
+Overall Gainers
+
+# Step 1: Set up the request
+url = 'https://m.economictimes.com/stocks/marketstats/top-gainers/nse'
+headers = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36',
+    'Referer': 'https://www.google.com'
+}
+
+response = requests.get(url, headers=headers)
+soup = BeautifulSoup(response.text, 'html.parser')
+
+# Step 2: Extract column names
+columns = [div.get_text(strip=True) for div in soup.find_all("div", class_="MarketTable_theading__R8YA5")]
+
+# Step 3: Get both tbody sections
+tbody_sections = soup.find_all('tbody')
+tbody1 = tbody_sections[0]
+tbody2 = tbody_sections[1]
+
+# Step 4: Extract first 3 columns from tbody1
+part1 = []
+for row in tbody1.find_all('tr'):
+    cells = row.find_all('td')
+    part1.append([cell.get_text(strip=True) for cell in cells[:3]])
+
+# Step 5: Extract remaining columns from tbody2
+part2 = []
+for row in tbody2.find_all('tr'):
+    cells = row.find_all('td')
+    part2.append([cell.get_text(strip=True) for cell in cells])
+
+# Step 6: Combine both parts
+combined_data = [p1 + p2 for p1, p2 in zip(part1, part2)]
+
+# Step 7: Fix column mismatch if needed
+if len(columns) < len(combined_data[0]):
+    columns.append("Extra Column")  # Add placeholder for extra value
+
+# Step 8: Create DataFrame
+all_gainers = pd.DataFrame(combined_data, columns=columns)
+
+
+all_gainers = all_gainers.drop(columns=['Extra Column'])
+
+all_gainers["Date"] = datetime.today().date()
+
+# Reanme the columns
+all_gainers = all_gainers.rename(columns={
+    'Company Name': 'company_name',
+    'Current Price (Rs)': 'current_price_rs',
+    'Price Change': 'price_change',
+    '% Change': 'percent_change',
+    'Stock Score': 'stock_score',
+    'Potential Upside': 'potential_upside',
+    'Volume': 'volume',
+    'Total Asset Turnover': 'total_asset_turnover',
+    'Market Cap (Rs Cr)': 'market_cap_rs_cr',
+    '1W Returns': 'one_week_returns',
+    '1M Returns': 'one_month_returns',
+    '3M Returns': 'three_month_returns',
+    '6M Returns': 'six_month_returns',
+    '1Y Returns': 'one_year_returns',
+    '3Y Returns': 'three_year_returns',
+    'YTD Returns': 'ytd_returns',
+    'Date': 'date'
+})
+
+
+# Rename the star-column to your canonical name
+all_gainers = all_gainers.rename(columns={'Potential Upside*': 'potential_upside'})
+
+# Now this will work
+all_gainers = all_gainers.drop(columns=['potential_upside', 'stock_score'])
+all_gainers = all_gainers.head(10)
+all_gainers 
+
+
+Overall Loosers
+
+url = 'https://m.economictimes.com/stocks/marketstats/top-losers/nse'
+headers = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36',
+    'Referer': 'https://www.google.com'
+}
+
+response = requests.get(url, headers=headers)
+soup = BeautifulSoup(response.text, 'html.parser')
+
+# Step 2: Extract column names
+columns = [div.get_text(strip=True) for div in soup.find_all("div", class_="MarketTable_theading__R8YA5")]
+
+# Step 3: Get both tbody sections
+tbody_sections = soup.find_all('tbody')
+tbody1 = tbody_sections[0]
+tbody2 = tbody_sections[1]
+
+# Step 4: Extract first 3 columns from tbody1
+part1 = []
+for row in tbody1.find_all('tr'):
+    cells = row.find_all('td')
+    part1.append([cell.get_text(strip=True) for cell in cells[:3]])
+
+# Step 5: Extract remaining columns from tbody2
+part2 = []
+for row in tbody2.find_all('tr'):
+    cells = row.find_all('td')
+    part2.append([cell.get_text(strip=True) for cell in cells])
+
+# Step 6: Combine both parts
+combined_data = [p1 + p2 for p1, p2 in zip(part1, part2)]
+
+# Step 7: Fix column mismatch if needed
+if len(columns) < len(combined_data[0]):
+    columns.append("Extra Column")  # Add placeholder for extra value
+
+# Step 8: Create DataFrame
+all_loosers = pd.DataFrame(combined_data, columns=columns)
+
+
+all_loosers = all_loosers.drop(columns=['Extra Column'])
+
+all_loosers["Date"] = datetime.today().date()
+
+all_loosers = all_loosers.rename(columns={
+    'Company Name': 'company_name',
+    'Current Price (Rs)': 'current_price_rs',
+    'Price Change': 'price_change',
+    '% Change': 'percent_change',
+    'Stock Score': 'stock_score',
+    'Potential Upside': 'potential_upside',
+    'Volume': 'volume',
+    'Total Asset Turnover': 'total_asset_turnover',
+    'Market Cap (Rs Cr)': 'market_cap_rs_cr',
+    '1W Returns': 'one_week_returns',
+    '1M Returns': 'one_month_returns',
+    '3M Returns': 'three_month_returns',
+    '6M Returns': 'six_month_returns',
+    '1Y Returns': 'one_year_returns',
+    '3Y Returns': 'three_year_returns',
+    'YTD Returns': 'ytd_returns',
+    'Date': 'date'
+})
+
+# Rename the star-column to your canonical name
+all_loosers = all_loosers.rename(columns={'Potential Upside*': 'potential_upside'})
+
+# Now this will work
+all_loosers = all_loosers.drop(columns=['potential_upside', 'stock_score'])
+
+all_loosers = all_loosers.head(10)
+
+all_loosers
